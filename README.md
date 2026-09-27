@@ -20,5 +20,5 @@ app.js       상태·렌더링·편집·드래그·동기화 (초기 데이터 s
 ```
 
 ## 배포
-Settings → Pages → Source: **Deploy from a branch**, Branch: `main` / `(root)`.
+`.github/workflows/pages.yml`이 main에 push될 때마다 GitHub Pages로 배포합니다 (Settings → Pages → Source: **GitHub Actions**).
 push하면 1~2분 내 `https://april774936.github.io/project-hub/`에 반영됩니다.
