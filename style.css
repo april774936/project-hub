@@ -254,6 +254,32 @@ main { max-width: 1320px; margin: 0 auto; padding: 24px; }
   padding: 9px 16px; border-radius: 10px; box-shadow: var(--shadow); z-index: 50; font-weight: 600;
 }
 
+/* ---------- Project title link ---------- */
+.pc-title-link { color: var(--text); display: inline-flex; align-items: baseline; gap: 4px; }
+.pc-title-link:hover { color: var(--pc, var(--primary)); text-decoration: none; }
+.pc-title-link .ext { font-size: 12px; color: var(--text-3); transition: transform 0.15s, color 0.15s; }
+.pc-title-link:hover .ext { color: var(--pc, var(--primary)); transform: translate(1px, -1px); }
+
+/* ---------- Checklist ---------- */
+.progress { display: flex; align-items: center; gap: 8px; }
+.progress-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.progress-bar > span { display: block; height: 100%; background: var(--ok); border-radius: 2px; }
+.progress-text { font-size: 12px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.mini-progress { font-size: 12px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.cl-count { color: var(--text-3); font-weight: 600; margin-left: 4px; }
+.checklist { display: flex; flex-direction: column; gap: 2px; }
+.cl-item { display: flex; align-items: center; gap: 8px; padding: 2px 4px; border-radius: 6px; }
+.cl-item:hover { background: var(--surface-2); }
+.cl-item input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--ok); flex-shrink: 0; cursor: pointer; }
+.field .cl-text { flex: 1; border: 0; background: transparent; padding: 5px 2px; border-radius: 4px; }
+.field .cl-text:focus { background: var(--bg); }
+.cl-item.done .cl-text { color: var(--text-3); text-decoration: line-through; }
+.cl-del { border: 0; background: none; color: var(--text-3); font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px; opacity: 0; }
+.cl-item:hover .cl-del, .cl-del:focus { opacity: 1; }
+.cl-del:hover { color: var(--danger); }
+.modal { max-height: calc(100vh - 32px); }
+@media (hover: none) { .cl-del { opacity: 1; } }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1080px) {
   .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }

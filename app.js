@@ -35,8 +35,9 @@
   // ---------- Seed data (2026-09-27) ----------
   const P = (id, name, desc, status, deploy, url, repo, color, order) =>
     ({ id, name, desc, status, deploy, url, repo, color, order, updatedAt: SEED_AT });
-  const T = (id, projectId, title, status, priority, due, note = '') =>
-    ({ id, projectId, title, status, priority, due, note, createdAt: SEED_AT, updatedAt: SEED_AT });
+  const C = (...items) => items.map((text, i) => ({ id: 'c' + i, text, done: false }));
+  const T = (id, projectId, title, status, priority, due, note = '', checklist = []) =>
+    ({ id, projectId, title, status, priority, due, note, checklist, createdAt: SEED_AT, updatedAt: SEED_AT });
 
   function seed() {
     return {
@@ -49,7 +50,8 @@
         P('p_common', '허브 공통', '계정·보안·에이전트 운영 등 공통 작업', 'dev', '', '', '', '#94a3b8', 6)
       ],
       tasks: [
-        T('t_krx', 'p_bokwatch', 'KRX Open API 키 갱신 여부 + Actions 실행 로그 확인', 'todo', 'high', '2026-09-28', '9/25 무렵 만료 예정, 마지막 자동 동기화 커밋 9/24.'),
+        T('t_krx', 'p_bokwatch', 'KRX Open API 키 갱신 여부 + Actions 실행 로그 확인', 'todo', 'high', '2026-09-28', '9/25 무렵 만료 예정, 마지막 자동 동기화 커밋 9/24.',
+          C('최근 Actions 실행 성공/실패 확인', '만료됐으면 KRX에서 키 재발급', 'GitHub Secrets 값 교체 후 수동 실행')),
         T('t_rate1022', 'p_bokwatch', '10/22 금통위 결과 RATE_STEPS 추가', 'todo', 'mid', '2026-10-23', '자동화 안 됨 — 수동 한 줄 추가.'),
         T('t_rate1126', 'p_bokwatch', '11/26 금통위 결과 RATE_STEPS 추가', 'todo', 'mid', '2026-11-27'),
         T('t_pm_supabase', 'p_passmaster', 'Supabase 저장 이관 완료 여부 + 배포본 저장 동작 확인', 'doing', 'high', '2026-09-30', 'passmaster_docs 테이블. 원래 window.claude.use("db") 의존이라 배포본 저장 불가였음.'),
@@ -57,7 +59,8 @@
         T('t_pm_types', 'p_passmaster', '문항 유형 다양화', 'todo', 'mid', ''),
         T('t_pm_los', 'p_passmaster', '빈 LOS 132개 채우기', 'todo', 'low', ''),
         T('t_pm_invest', 'p_passmaster', '투자자산운용사 전용 프레임워크 설계', 'todo', 'low', ''),
-        T('t_fc_rls', 'p_flowcraft', 'Supabase 보안 정책(RLS) 점검', 'todo', 'high', '2026-10-04', 'flowcraft_sync 테이블 (project-hub도 같은 테이블 사용).'),
+        T('t_fc_rls', 'p_flowcraft', 'Supabase 보안 정책(RLS) 점검', 'todo', 'high', '2026-10-04', 'flowcraft_sync 테이블 (project-hub도 같은 테이블 사용).',
+          C('Supabase 대시보드에서 flowcraft_sync RLS 켜짐 여부 확인', '익명 키로 전체 목록 조회가 막히는지 확인', 'leet_master · passmaster 테이블도 같은 방식으로 점검')),
         T('t_fc_cleanup', 'p_flowcraft', '미사용 ProjectModal.js 정리', 'todo', 'low', ''),
         T('t_leet_rls', 'p_leet', 'Supabase 보안 정책(RLS) 적용 여부 결정', 'todo', 'low', ''),
         T('t_rh_tailscale', 'p_reporthub', 'Tailscale Funnel 유지/해지 결정', 'todo', 'low', '', '서빙은 Vercel로 이전 완료. 맥 전용 기능(텔레그램 설정 등)용으로만 남아 있음.'),
@@ -201,7 +204,9 @@
       return `
         <article class="project-card" style="--pc:${safeColor(p.color)}">
           <div class="pc-head">
-            <div class="pc-title">${esc(p.name)}</div>
+            ${url
+              ? `<a class="pc-title pc-title-link" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)} 열기">${esc(p.name)}<span class="ext" aria-hidden="true">↗</span></a>`
+              : `<div class="pc-title">${esc(p.name)}</div>`}
             <span class="pill s-${esc(p.status)}">${st.label}</span>
             <button class="pc-edit" data-edit-project="${esc(p.id)}" title="프로젝트 편집">편집</button>
           </div>
@@ -218,6 +223,7 @@
               <div class="pc-task" data-edit-task="${esc(t.id)}">
                 <span class="dot p-${esc(t.priority)}"></span>
                 <span class="t">${esc(t.title)}</span>
+                ${(t.checklist || []).length ? `<span class="mini-progress">${t.checklist.filter((c) => c.done).length}/${t.checklist.length}</span>` : ''}
                 ${t.due ? `<span class="due ${dueClass(t)}">${dueLabel(t.due)}</span>` : ''}
               </div>`).join('') : '<div class="pc-empty">열린 할 일 없음</div>'}
           </div>
@@ -256,12 +262,24 @@
     if (qi) qi.focus();
   }
 
+  // "2/5" + thin bar for tasks that have a checklist
+  function progressHtml(t) {
+    const items = Array.isArray(t.checklist) ? t.checklist : [];
+    if (!items.length) return '';
+    const done = items.filter((c) => c.done).length;
+    return `<div class="progress" title="체크리스트 ${done}/${items.length}">
+      <span class="progress-bar"><span style="width:${Math.round((done / items.length) * 100)}%"></span></span>
+      <span class="progress-text">${done}/${items.length}</span>
+    </div>`;
+  }
+
   function cardHtml(t) {
     const p = projectById(t.projectId);
     return `
       <div class="card ${t.status === 'done' ? 'done' : ''}" draggable="true" data-task="${esc(t.id)}" style="--pc:${p ? safeColor(p.color) : 'var(--border-strong)'}">
         <div class="card-title">${esc(t.title)}</div>
         ${t.note ? `<div class="card-note">${esc(t.note)}</div>` : ''}
+        ${progressHtml(t)}
         <div class="card-meta">
           <span class="dot p-${esc(t.priority)}" title="우선순위 ${esc((PRIORITIES.find((x) => x.key === t.priority) || {}).label || '')}"></span>
           ${p ? `<span class="proj">${esc(p.name)}</span>` : ''}
@@ -338,6 +356,11 @@
           <div class="field"><label for="f-due">마감일</label><input id="f-due" type="date" value="${esc(t.due)}" /></div>
         </div>
         <div class="field"><label for="f-note">메모</label><textarea id="f-note" maxlength="2000">${esc(t.note)}</textarea></div>
+        <div class="field">
+          <label>체크리스트 <span class="cl-count" id="cl-count"></span></label>
+          <div class="checklist" id="checklist"></div>
+          <input class="cl-new" id="cl-new" maxlength="200" placeholder="항목 추가 후 Enter" />
+        </div>
         <div class="modal-actions">
           ${isNew ? '' : '<button type="button" class="btn danger" data-act="delete">삭제</button>'}
           <span class="spacer"></span>
@@ -349,17 +372,62 @@
       e.preventDefault();
       const title = modal.querySelector('#f-title').value.trim();
       if (!title) return;
+      const pending = modal.querySelector('#cl-new').value.trim();
+      if (pending) checklist.push({ id: uid('c'), text: pending, done: false });
       upsert('tasks', {
         ...t, title,
         projectId: modal.querySelector('#f-project').value,
         status: modal.querySelector('#f-status').value,
         priority: modal.querySelector('#f-priority').value,
         due: modal.querySelector('#f-due').value,
-        note: modal.querySelector('#f-note').value.trim()
+        note: modal.querySelector('#f-note').value.trim(),
+        checklist: checklist.filter((c) => c.text.trim())
       });
       modal.close();
     };
     bindModalButtons(() => { if (confirm('이 할 일을 삭제할까요?')) { remove('tasks', t.id); modal.close(); } });
+
+    // Checklist editor (applied on 저장, discarded on 취소)
+    const checklist = (Array.isArray(t.checklist) ? t.checklist : []).map((c) => ({ ...c }));
+    const listEl = modal.querySelector('#checklist');
+    const renderChecklist = () => {
+      const done = checklist.filter((c) => c.done).length;
+      modal.querySelector('#cl-count').textContent = checklist.length ? `${done}/${checklist.length}` : '';
+      listEl.innerHTML = checklist.map((c, i) => `
+        <div class="cl-item ${c.done ? 'done' : ''}">
+          <input type="checkbox" data-cl-toggle="${i}" ${c.done ? 'checked' : ''} aria-label="완료" />
+          <input class="cl-text" data-cl-text="${i}" value="${esc(c.text)}" maxlength="200" />
+          <button type="button" class="cl-del" data-cl-del="${i}" title="삭제">×</button>
+        </div>`).join('');
+    };
+    listEl.addEventListener('change', (e) => {
+      const i = e.target.dataset.clToggle;
+      if (i !== undefined) { checklist[i].done = e.target.checked; renderChecklist(); }
+    });
+    listEl.addEventListener('input', (e) => {
+      const i = e.target.dataset.clText;
+      if (i !== undefined) checklist[i].text = e.target.value;
+    });
+    listEl.addEventListener('click', (e) => {
+      const i = e.target.dataset.clDel;
+      if (i !== undefined) { checklist.splice(Number(i), 1); renderChecklist(); }
+    });
+    listEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.isComposing && e.target.dataset.clText !== undefined) {
+        e.preventDefault();
+        modal.querySelector('#cl-new').focus();
+      }
+    });
+    modal.querySelector('#cl-new').addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      e.preventDefault();
+      const text = e.target.value.trim();
+      if (!text) return;
+      checklist.push({ id: uid('c'), text, done: false });
+      e.target.value = '';
+      renderChecklist();
+    });
+    renderChecklist();
     modal.showModal();
     modal.querySelector('#f-title').focus();
   }
