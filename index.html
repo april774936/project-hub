@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project Hub</title>
+  <meta name="description" content="개인 프로젝트 현황·할일·일정 관리" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><path d='M9 11h14M9 16h10M9 21h6' stroke='white' stroke-width='2.5' stroke-linecap='round'/></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>Project Hub</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="overview" role="tab">개요</button>
+      <button class="tab" data-view="board" role="tab">보드</button>
+      <button class="tab" data-view="schedule" role="tab">일정</button>
+    </nav>
+    <div class="top-actions">
+      <button class="sync-badge" id="sync-badge" title="기기 간 동기화 설정">동기화 꺼짐</button>
+      <div class="menu">
+        <button class="icon-btn" id="menu-btn" title="더보기" aria-haspopup="true">⋯</button>
+        <div class="menu-pop" id="menu-pop" hidden>
+          <button data-action="theme">테마 전환</button>
+          <button data-action="export">JSON 백업 다운로드</button>
+          <button data-action="import">JSON 백업 불러오기</button>
+          <button data-action="sync">동기화 코드 설정</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="view" id="view-overview">
+      <div class="stats" id="stats"></div>
+      <div class="section-head">
+        <h2>프로젝트</h2>
+        <button class="btn" id="add-project">+ 프로젝트</button>
+      </div>
+      <div class="project-grid" id="project-grid"></div>
+    </section>
+
+    <section class="view" id="view-board" hidden>
+      <div class="filter-row" id="filter-row"></div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <section class="view" id="view-schedule" hidden>
+      <div class="schedule" id="schedule"></div>
+    </section>
+  </main>
+
+  <dialog class="modal" id="modal"></dialog>
+  <input type="file" id="import-file" accept="application/json" hidden />
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
