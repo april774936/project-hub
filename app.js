@@ -205,18 +205,15 @@
         <article class="project-card" style="--pc:${safeColor(p.color)}">
           <div class="pc-head">
             ${url
-              ? `<a class="pc-title pc-title-link" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)} 열기">${esc(p.name)}<span class="ext" aria-hidden="true">↗</span></a>`
-              : `<div class="pc-title">${esc(p.name)}</div>`}
+              ? `<a class="pc-title pc-title-link" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)} 열기"><span class="pc-dot"></span><span class="pc-name">${esc(p.name)}</span><span class="ext" aria-hidden="true">↗</span></a>`
+              : `<div class="pc-title"><span class="pc-dot"></span><span class="pc-name">${esc(p.name)}</span></div>`}
             <span class="pill s-${esc(p.status)}">${st.label}</span>
-            <button class="pc-edit" data-edit-project="${esc(p.id)}" title="프로젝트 편집">편집</button>
+            <button class="pc-edit" data-edit-project="${esc(p.id)}" title="프로젝트 편집" aria-label="프로젝트 편집">✎</button>
           </div>
           ${p.desc ? `<div class="pc-desc">${esc(p.desc)}</div>` : ''}
-          ${(p.deploy || url || repo) ? `<div class="pc-meta">
+          ${(p.deploy || repo) ? `<div class="pc-meta">
             ${p.deploy ? `<span>${esc(p.deploy)}</span>` : ''}
-            <span class="pc-links">
-              ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">사이트 ↗</a>` : ''}
-              ${repo ? `<a href="${esc(repo)}" target="_blank" rel="noopener">GitHub ↗</a>` : ''}
-            </span>
+            ${repo ? `<a href="${esc(repo)}" target="_blank" rel="noopener">GitHub ↗</a>` : ''}
           </div>` : ''}
           <div class="pc-tasks">
             ${tasks.length ? tasks.slice(0, 4).map((t) => `
@@ -229,7 +226,7 @@
           </div>
           <div class="pc-foot">
             <span>열린 할 일 ${tasks.length}개${tasks.length > 4 ? ` · ${tasks.length - 4}개 더` : ''}</span>
-            <button data-board-project="${esc(p.id)}">보드에서 보기 →</button>
+            <button data-board-project="${esc(p.id)}">보드 →</button>
           </div>
         </article>`;
     }).join('');
@@ -281,8 +278,8 @@
         ${t.note ? `<div class="card-note">${esc(t.note)}</div>` : ''}
         ${progressHtml(t)}
         <div class="card-meta">
-          <span class="dot p-${esc(t.priority)}" title="우선순위 ${esc((PRIORITIES.find((x) => x.key === t.priority) || {}).label || '')}"></span>
-          ${p ? `<span class="proj">${esc(p.name)}</span>` : ''}
+          ${p ? `<span class="proj"><span class="dot"></span>${esc(p.name)}</span>` : ''}
+          ${t.priority === 'high' ? '<span class="prio-high">높음</span>' : ''}
           ${t.due ? `<span class="due ${dueClass(t)}">${dueLabel(t.due)}</span>` : ''}
         </div>
       </div>`;
@@ -314,7 +311,7 @@
                   <div class="sch-date">${d.getMonth() + 1}/${d.getDate()} (${wd[d.getDay()]})<small class="due ${dueClass(t)}">${dueLabel(t.due, true)}</small></div>
                   <div>
                     <div class="sch-title">${esc(t.title)}</div>
-                    <div class="sch-sub"><span class="dot p-${esc(t.priority)}"></span>${p ? `<span class="proj">${esc(p.name)}</span>` : ''}</div>
+                    <div class="sch-sub">${p ? `<span class="proj"><span class="dot"></span>${esc(p.name)}</span>` : ''}${t.priority === 'high' ? '<span class="prio-high">높음</span>' : ''}</div>
                   </div>
                   <span class="status-tag">${st ? st.label : ''}</span>
                 </div>`;
