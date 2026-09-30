@@ -47,7 +47,8 @@
         P('p_leet', 'leet_master', 'LEET 기출문제 풀이', 'live', 'GitHub Pages', 'https://april774936.github.io/leet_master/', 'https://github.com/april774936/leet_master', '#34d399', 3),
         P('p_bokwatch', 'bokwatch', '한국은행 금리결정 확률모델', 'issue', 'GitHub Pages + Actions', 'https://april774936.github.io/bokwatch/', 'https://github.com/april774936/bokwatch', '#38bdf8', 4),
         P('p_reporthub', 'report-hub', '기관 리포트 수집·알림 대시보드', 'live', 'Vercel + 맥미니 크롤러', 'https://report-hub-pied.vercel.app', 'https://github.com/april774936/report-hub', '#f472b6', 5),
-        P('p_common', '허브 공통', '계정·보안·에이전트 운영 등 공통 작업', 'dev', '', '', '', '#94a3b8', 6)
+        P('p_common', '허브 공통', '계정·보안·에이전트 운영 등 공통 작업', 'dev', '', '', '', '#94a3b8', 6),
+        ...ADDED_PROJECTS
       ],
       tasks: [
         T('t_krx', 'p_bokwatch', 'KRX Open API 키 갱신 여부 + Actions 실행 로그 확인', 'todo', 'high', '2026-09-28', '9/25 무렵 만료 예정, 마지막 자동 동기화 커밋 9/24.',
@@ -67,10 +68,47 @@
         T('t_common_token', 'p_common', 'GitHub 토큰 교체 (fine-grained · 저장소 한정 · 만료일 지정)', 'todo', 'high', '2026-10-04'),
         T('t_common_ci', 'p_common', '나머지 4개 저장소에 CI 빌드 검사 추가', 'todo', 'mid', ''),
         T('t_common_jobs', 'p_common', '채용공고 스크리너 폴더 용도 결정', 'todo', 'low', ''),
-        T('t_done_fc', 'p_flowcraft', '빌드 오류·툴바 먹통 수정, 동기화 병합, 노드 디자인 개편 (PR #1)', 'done', 'mid', '2026-09-27')
+        T('t_done_fc', 'p_flowcraft', '빌드 오류·툴바 먹통 수정, 동기화 병합, 노드 디자인 개편 (PR #1)', 'done', 'mid', '2026-09-27'),
+        ...ADDED_TASKS
       ],
       tombstones: {}
     };
+  }
+
+  // ---------- Additions after the first seed ----------
+  // 이미 쓰던 브라우저에도 들어가도록 load() 때 '없고, 지운 적 없는' 항목만 추가한다 (동기화로 다른 기기에도 전파).
+  const ADDED_AT = '2026-09-30T12:00:00.000Z';
+  const AP = (...a) => ({ ...P(...a), updatedAt: ADDED_AT });
+  const AT = (...a) => ({ ...T(...a), createdAt: ADDED_AT, updatedAt: ADDED_AT });
+  const ADDED_PROJECTS = [
+    AP('p_jobscreener', 'job-screener', '회계법인·증권 RA·컨설팅 인턴 공고 수집·AI 판정 대시보드', 'dev', 'Vercel(예정) + GitHub Actions + 맥미니', '', 'https://github.com/april774936/job-screener', '#a78bfa', 5.5)
+  ];
+  const ADDED_TASKS = [
+    AT('t_js_tokens', 'p_jobscreener', '세션 환경변수에 토큰 3개 등록 → Claude가 DB·배포·첫 수집 진행', 'todo', 'high', '2026-10-02',
+      '세션 제목 옆 클라우드 환경 → Edit → 환경변수. 새 세션에서 "job-screener 이어서 해".',
+      C('GEMINI_API_KEY (aistudio.google.com)', 'SUPABASE_ACCESS_TOKEN (supabase.com → Account → Access Tokens)', 'VERCEL_TOKEN (vercel.com → Settings → Tokens)')),
+    AT('t_js_rotate', 'p_jobscreener', 'Gemini 키 재발급 (채팅에 붙여넣었던 키 폐기)', 'todo', 'high', '2026-10-02'),
+    AT('t_js_mac', 'p_jobscreener', '맥미니: 네이버 로그인 + 카페 피드 수집 등록', 'todo', 'mid', '',
+      'README 5번 명령어. --debug-feed 결과를 Claude에게 주면 피드 파서 조정.',
+      C('npm install && npx playwright install chromium', 'npm run naver:login', './scripts/setup-mac.sh')),
+    AT('t_js_intl', 'p_jobscreener', '국제기구 공고 스크리닝 추가', 'todo', 'low', '')
+  ];
+  // 이미 끝난 옛 할 일 (사용자가 안 건드렸을 때만 완료 처리)
+  const ADDED_DONE = { t_common_jobs: '채용공고 스크리너 → job-screener 저장소로 결정' };
+
+  function applyAdditions(d) {
+    let changed = false;
+    for (const p of ADDED_PROJECTS) {
+      if (!d.projects.some((x) => x.id === p.id) && !d.tombstones[p.id]) { d.projects.push({ ...p }); changed = true; }
+    }
+    for (const t of ADDED_TASKS) {
+      if (!d.tasks.some((x) => x.id === t.id) && !d.tombstones[t.id]) { d.tasks.push({ ...t, checklist: t.checklist.map((c) => ({ ...c })) }); changed = true; }
+    }
+    for (const [id, note] of Object.entries(ADDED_DONE)) {
+      const t = d.tasks.find((x) => x.id === id);
+      if (t && t.status !== 'done' && t.updatedAt === SEED_AT) { Object.assign(t, { status: 'done', note, updatedAt: ADDED_AT }); changed = true; }
+    }
+    return changed;
   }
 
   // ---------- State ----------
@@ -82,10 +120,13 @@
       const raw = JSON.parse(localStorage.getItem(STORE_KEY));
       if (raw && Array.isArray(raw.projects) && Array.isArray(raw.tasks)) {
         raw.tombstones = raw.tombstones || {};
+        applyAdditions(raw);
         return raw;
       }
     } catch (e) { /* fall through to seed */ }
-    return seed();
+    const fresh = seed();
+    applyAdditions(fresh);
+    return fresh;
   }
 
   function persist() {
