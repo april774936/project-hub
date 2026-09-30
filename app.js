@@ -563,6 +563,67 @@
     if (t && t.status !== col.dataset.status) upsert('tasks', { ...t, status: col.dataset.status });
   });
 
+  // Touch: HTML5 drag & drop doesn't fire on phones, so long-press a card (~0.35s) to pick it up,
+  // drag it over a column (the page auto-scrolls near the edges) and lift to drop
+  let touchDrag = null;
+  document.addEventListener('touchstart', (e) => {
+    const card = e.target.closest && e.target.closest('#board .card');
+    if (!card || e.touches.length !== 1) return;
+    const t0 = e.touches[0];
+    const st = { card, id: card.dataset.task, x: t0.clientX, y: t0.clientY, active: false, ghost: null, col: null, raf: 0, vy: 0 };
+    st.timer = setTimeout(() => {
+      st.active = true;
+      const r = card.getBoundingClientRect();
+      st.dx = st.x - r.left; st.dy = st.y - r.top;
+      st.ghost = card.cloneNode(true);
+      Object.assign(st.ghost.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', zIndex: 60, pointerEvents: 'none', opacity: '0.92', transform: 'rotate(1.5deg) scale(1.02)', boxShadow: 'var(--shadow)' });
+      document.body.appendChild(st.ghost);
+      card.classList.add('dragging');
+      if (navigator.vibrate) navigator.vibrate(12);
+      const tick = () => { if (st.vy) window.scrollBy(0, st.vy); st.raf = requestAnimationFrame(tick); };
+      st.raf = requestAnimationFrame(tick);
+    }, 350);
+    touchDrag = st;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    const st = touchDrag;
+    if (!st) return;
+    const t0 = e.touches[0];
+    if (!st.active) {
+      if (Math.hypot(t0.clientX - st.x, t0.clientY - st.y) > 8) { clearTimeout(st.timer); touchDrag = null; } // it's a scroll
+      return;
+    }
+    e.preventDefault();
+    st.x = t0.clientX; st.y = t0.clientY;
+    st.ghost.style.left = st.x - st.dx + 'px';
+    st.ghost.style.top = st.y - st.dy + 'px';
+    const edge = 70;
+    st.vy = st.y < edge ? -12 : st.y > window.innerHeight - edge ? 12 : 0;
+    const under = document.elementFromPoint(st.x, st.y);
+    const col = under && under.closest('.column');
+    if (col !== st.col) {
+      st.col && st.col.classList.remove('drop');
+      col && col.classList.add('drop');
+      st.col = col;
+    }
+  }, { passive: false });
+  const endTouchDrag = (e) => {
+    const st = touchDrag;
+    if (!st) return;
+    clearTimeout(st.timer);
+    touchDrag = null;
+    if (!st.active) return;
+    e.preventDefault(); // no click → no edit modal after a drag
+    cancelAnimationFrame(st.raf);
+    st.ghost.remove();
+    st.card.classList.remove('dragging');
+    document.querySelectorAll('.column.drop').forEach((c) => c.classList.remove('drop'));
+    const t = db.tasks.find((x) => x.id === st.id);
+    if (st.col && t && t.status !== st.col.dataset.status) upsert('tasks', { ...t, status: st.col.dataset.status });
+  };
+  document.addEventListener('touchend', endTouchDrag, { passive: false });
+  document.addEventListener('touchcancel', endTouchDrag, { passive: false });
+
   // Menu
   const menuPop = document.getElementById('menu-pop');
   document.getElementById('menu-btn').addEventListener('click', (e) => { e.stopPropagation(); menuPop.hidden = !menuPop.hidden; });

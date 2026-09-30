@@ -303,3 +303,12 @@ main { max-width: 1320px; margin: 0 auto; padding: 24px; }
   .row { grid-template-columns: 1fr; }
   .pc-edit { opacity: 1; }
 }
+
+/* ---------- Touch ---------- */
+@media (pointer: coarse) {
+  /* long-press on a card picks it up (app.js), so no iOS text selection / callout there */
+  #board .card { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  /* iOS zooms into inputs below 16px on focus */
+  input, select, textarea { font-size: 16px; }
+  .pc-edit { opacity: 1; }
+}
