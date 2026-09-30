@@ -32,6 +32,37 @@
   ];
   const COLORS = ['#818cf8', '#34d399', '#f59e0b', '#38bdf8', '#f472b6', '#a78bfa', '#94a3b8', '#f87171'];
 
+  // ---------- Project logos (each site's own favicon/brand mark, inline so they work offline) ----------
+  // Keyed by project id; projects without one keep the color dot.
+  const LOGO_BOX = (inner, bg) => `<svg viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">${bg}${inner}</svg>`;
+  const LOGOS = {
+    // flowcraft-studio: gradient tile + workflow glyph (app header logo)
+    p_flowcraft: LOGO_BOX(
+      '<g transform="translate(5 5) scale(0.75)" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></g>',
+      '<defs><linearGradient id="lg-fc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c084fc"/><stop offset=".45" stop-color="#818cf8"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><rect width="28" height="28" rx="7" fill="url(#lg-fc)"/>'),
+    // passmaster: gold brand mark with the course badge (sidebar)
+    p_passmaster: LOGO_BOX(
+      '<text x="14" y="17.6" text-anchor="middle" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="9" font-weight="700" fill="#241C08">CFA</text>',
+      '<rect width="28" height="28" rx="7" fill="#F0BD3E"/>'),
+    // leet_master: ⚖️ on the indigo tile (header / home-screen icon)
+    p_leet: LOGO_BOX(
+      '<text x="14" y="19.5" text-anchor="middle" font-size="15">⚖️</text>',
+      '<rect width="28" height="28" rx="7" fill="#4f46e5"/>'),
+    // bokwatch: navy header with the "BOK" wordmark and its blue accent
+    p_bokwatch: LOGO_BOX(
+      '<text x="14" y="16.2" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="9" font-weight="800" letter-spacing="-.3" fill="#EAF1FB">BOK</text><rect x="7" y="19.2" width="14" height="2" rx="1" fill="#3E82DA"/>',
+      '<rect width="28" height="28" rx="7" fill="#16294A"/>'),
+    // report-hub: public/icon.svg, scaled down
+    p_reporthub: `<svg viewBox="0 0 512 512" width="28" height="28" aria-hidden="true"><defs><linearGradient id="lg-rh-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f172a"/><stop offset="1" stop-color="#020617"/></linearGradient><linearGradient id="lg-rh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs><rect width="512" height="512" rx="128" fill="url(#lg-rh-bg)"/><rect x="96" y="96" width="320" height="320" rx="36" fill="#1e293b"/><path d="M160 176h192M160 236h192M160 296h120" stroke="#94a3b8" stroke-width="22" stroke-linecap="round"/><circle cx="340" cy="340" r="56" fill="url(#lg-rh)"/><path d="M340 318v24l14 14" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+    // 허브 공통: Project Hub's own favicon
+    p_common: LOGO_BOX(
+      '<path d="M8 10h12M8 14h9M8 18h5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>',
+      '<rect width="28" height="28" rx="7" fill="#6366f1"/>')
+  };
+  const logoHtml = (p) => LOGOS[p.id]
+    ? `<span class="pc-logo">${LOGOS[p.id]}</span>`
+    : '<span class="pc-dot"></span>';
+
   // ---------- Seed data (2026-09-27) ----------
   const P = (id, name, desc, status, deploy, url, repo, color, order) =>
     ({ id, name, desc, status, deploy, url, repo, color, order, updatedAt: SEED_AT });
@@ -202,11 +233,11 @@
       const st = PROJECT_STATUSES.find((s) => s.key === p.status) || PROJECT_STATUSES[1];
       const url = safeUrl(p.url), repo = safeUrl(p.repo);
       return `
-        <article class="project-card" style="--pc:${safeColor(p.color)}">
+        <article class="project-card${LOGOS[p.id] ? ' has-logo' : ''}" style="--pc:${safeColor(p.color)}">
           <div class="pc-head">
             ${url
-              ? `<a class="pc-title pc-title-link" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)} 열기"><span class="pc-dot"></span><span class="pc-name">${esc(p.name)}</span><span class="ext" aria-hidden="true">↗</span></a>`
-              : `<div class="pc-title"><span class="pc-dot"></span><span class="pc-name">${esc(p.name)}</span></div>`}
+              ? `<a class="pc-title pc-title-link" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)} 열기">${logoHtml(p)}<span class="pc-name">${esc(p.name)}</span><span class="ext" aria-hidden="true">↗</span></a>`
+              : `<div class="pc-title">${logoHtml(p)}<span class="pc-name">${esc(p.name)}</span></div>`}
             <span class="pill s-${esc(p.status)}">${st.label}</span>
             <button class="pc-edit" data-edit-project="${esc(p.id)}" title="프로젝트 편집" aria-label="프로젝트 편집">✎</button>
           </div>

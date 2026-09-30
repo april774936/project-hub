@@ -119,7 +119,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 24px; }
 .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .section-head h2 { margin: 0; font-size: 18px; letter-spacing: -0.02em; }
 
-.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 16px; }
+.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 16px; }
 .project-card {
   position: relative;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
@@ -131,6 +131,10 @@ main { max-width: 1320px; margin: 0 auto; padding: 24px; }
 .project-card > * { min-width: 0; }
 .pc-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .pc-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-logo { width: 24px; height: 24px; flex-shrink: 0; display: inline-flex; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.18); }
+.pc-logo svg { display: block; width: 100%; height: 100%; }
+.project-card.has-logo .pc-desc, .project-card.has-logo .pc-meta { padding-left: 32px; }
+.project-card .pill { font-size: 11.5px; padding: 2px 8px; gap: 4px; }
 .pc-dot { width: 9px; height: 9px; border-radius: 3px; background: var(--pc, var(--primary)); flex-shrink: 0; }
 .pc-desc { color: var(--text-2); font-size: 13px; margin-top: -4px; padding-left: 17px; }
 .pc-edit { opacity: 0; border: 0; background: none; color: var(--text-3); padding: 2px 5px; border-radius: 6px; font-size: 14px; line-height: 1; }
