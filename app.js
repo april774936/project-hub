@@ -78,6 +78,7 @@
         P('p_leet', 'leet_master', 'LEET 기출문제 풀이', 'live', 'GitHub Pages', 'https://april774936.github.io/leet_master/', 'https://github.com/april774936/leet_master', '#34d399', 3),
         P('p_bokwatch', 'bokwatch', '한국은행 금리결정 확률모델', 'issue', 'GitHub Pages + Actions', 'https://april774936.github.io/bokwatch/', 'https://github.com/april774936/bokwatch', '#38bdf8', 4),
         P('p_reporthub', 'report-hub', '기관 리포트 수집·알림 대시보드', 'live', 'Vercel + 맥미니 크롤러', 'https://report-hub-pied.vercel.app', 'https://github.com/april774936/report-hub', '#f472b6', 5),
+        P('p_dart_eps', '공시 EPS 영향 모델', '공시를 읽고 EPS가 몇 % 변하는지 계산 (미래에셋 AI 챌린지 v1 확장)', 'dev', '', '', '', '#a78bfa', 5.5),
         P('p_common', '허브 공통', '계정·보안·에이전트 운영 등 공통 작업', 'dev', '', '', '', '#94a3b8', 6)
       ],
       tasks: [
@@ -98,6 +99,15 @@
         T('t_common_token', 'p_common', 'GitHub 토큰 교체 (fine-grained · 저장소 한정 · 만료일 지정)', 'todo', 'high', '2026-10-04'),
         T('t_common_ci', 'p_common', '나머지 4개 저장소에 CI 빌드 검사 추가', 'todo', 'mid', ''),
         T('t_common_jobs', 'p_common', '채용공고 스크리너 폴더 용도 결정', 'todo', 'low', ''),
+        T('t_dart_form', 'p_dart_eps', '초안 산출 형태 결정 (설계 문서 vs 코드 프로토타입)', 'todo', 'high', '', '코드로 가면 샘플 공시 원문이 필요함. 코퍼스는 서버 정리 때 지웠을 수 있어 로컬 잔존 파일부터 확인.'),
+        T('t_dart_extract', 'p_dart_eps', '공시 원문 → 입력 필드 추출 층 설계', 'todo', 'high', '', '현재는 신주 수·계약금액 등을 사람이 구조화해 넣어야 함. 규칙 기반 우선, 수치가 불명확할 때만 LLM 보조.',
+          C('유형별 필수 필드 목록 확정 (7개 유형)', '정규식·표 파서로 추출 후 누락 필드 식별', '불명확 케이스만 LLM 보조 + 결과 검증')),
+        T('t_dart_base', 'p_dart_eps', '기준 EPS 정의 확정 (직전 사업연도 연간 EPS로 고정)', 'todo', 'mid', '', '스냅샷 net_income이 연간/TTM 혼재라 변화율 분모가 모호함.'),
+        T('t_dart_output', 'p_dart_eps', '출력에 근거 공시 문구·확신도(명시값/가정값) 추가', 'todo', 'mid', ''),
+        T('t_dart_fund', 'p_dart_eps', '유상증자 조달자금 운용수익 반영', 'todo', 'low', '', '지금은 순수 희석만 계산해 희석폭이 과대평가됨.'),
+        T('t_dart_buyback', 'p_dart_eps', '자사주 매입: 금액만 공시되고 주식수가 없는 경우 처리', 'todo', 'low', ''),
+        T('t_dart_repo', 'p_dart_eps', '대회 레포 접근 불가 원인 확인 (삭제·비공개·권한)', 'todo', 'low', '', 'v1 코드(테스트 104개)는 맥미니의 OLD 폴더에 남아 있음. 7개 유형 계산식·HD현대마린엔진 검증(EPS +3.85%) 포함.'),
+        T('t_dart_v1', 'p_dart_eps', 'v1 계산 엔진: 7개 공시 유형 EPS 영향 결정론적 계산', 'done', 'mid', '2026-09-06', '유상증자·자사주·공급계약·무상증자·CB/BW·현금배당·타법인 취득. 주가는 PER 불변 가정의 참고치.'),
         T('t_done_fc', 'p_flowcraft', '빌드 오류·툴바 먹통 수정, 동기화 병합, 노드 디자인 개편 (PR #1)', 'done', 'mid', '2026-09-27')
       ],
       tombstones: {}
@@ -113,6 +123,12 @@
       const raw = JSON.parse(localStorage.getItem(STORE_KEY));
       if (raw && Array.isArray(raw.projects) && Array.isArray(raw.tasks)) {
         raw.tombstones = raw.tombstones || {};
+        const sd = seed();
+        ['projects', 'tasks'].forEach((k) => {
+          sd[k].forEach((it) => {
+            if (!raw[k].some((x) => x.id === it.id) && !raw.tombstones[it.id]) raw[k].push(it);
+          });
+        });
         return raw;
       }
     } catch (e) { /* fall through to seed */ }
